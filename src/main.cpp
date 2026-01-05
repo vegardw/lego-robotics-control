@@ -1,38 +1,31 @@
 #include <Arduino.h>
+#include <MovingBricks.h>
 
-#define MS_INPUT_PIN_1 A0  // PIN 1: Analog input with external 10k ohm pull-up resistor to 5V
 
-enum SensorState {
-  SENSOR_RELEASED = 0,
-  SENSOR_PRESSED  = 1
-};
-
-int touchSensorStete = SENSOR_RELEASED;
+void touchButtonCallback();
 
 void setup() {
-  pinMode(MS_INPUT_PIN_1, INPUT);         // Use external 10k ohm pull-up resistor to 5V
   Serial.begin(9600);
+  MovingBricks.begin();
+  MovingBricks.setTouchButton(touchButtonCallback);
 }
 
 void loop() {
-  // Simple touch sensor logic using analog read on pin 1
-  // No button debouncing for simplicity, need to be added for real applications
-  int pin1Voltage = analogRead(MS_INPUT_PIN_1) * (5.0 / 1023.0) * 1000; // mV
-  int newTouchSensorState = touchSensorStete;
+  // Simulate main loop doing other tasks
+  delay(500);
+}
 
-  if(pin1Voltage > 850 && pin1Voltage < 950) {
-    newTouchSensorState = SENSOR_PRESSED;
-  } else if (pin1Voltage > 4800) {
-    newTouchSensorState = SENSOR_RELEASED;
-  }
+// Example callback function for touch sensor events,
+// prints the current state to Serial Monitor.
+// This function is called from an ISR context, so it should be kept short.
+// Serial printing is generally not recommended in ISRs as they can block,
+// but is used here for demonstration purposes. Do not do this in production code.
+void touchButtonCallback() {
+  MBTouchState state = MovingBricks.getTouchState();
 
-  if(newTouchSensorState != touchSensorStete) {
-    touchSensorStete = newTouchSensorState;
-    if(touchSensorStete == SENSOR_PRESSED) {
-      Serial.println("Touch Sensor Pressed");
-    } else {
-      Serial.println("Touch Sensor Released");
-    }
+  if(state == MBTouchState::PRESSED) {
+    Serial.println("Touch Sensor Pressed");
+  } else if(state == MBTouchState::RELEASED) {
+    Serial.println("Touch Sensor Released");
   }
-  delay(100);
 }
