@@ -44,6 +44,7 @@ class MovingBricks_
         bool initialized = false;  ///< Flag indicating if the library is initialized.
         MBSensorType sensorType = MBSensorType::NONE;  ///< Current sensor type configured.
         MBTouchState touchState = MBTouchState::NONE;  ///< Current stable state of the touch sensor.
+        bool touchStateChanged = false;  ///< Flag indicating if the touch state has changed since last read.
         volatile MBTouchState rawTouchState = MBTouchState::NONE;  ///< Raw state from ADC readings.
         volatile int debounceCounter = 0;  ///< Counter for debouncing stability.
         int debounceThreshold = 2;  ///< Number of consecutive stable readings required for state change.
@@ -81,9 +82,9 @@ class MovingBricks_
         /**
          * @brief Sets the callback for touch sensor events.
          * Configures the sensor type to NXT_TOUCH and performs an initial read.
-         * @param callback Pointer to the callback function to be called on state change.
+         * @param callback Pointer to the callback function to be called on state change (default = nullptr).
          */
-        void setTouchButton(MBSensorCallback callback);
+        void setTouchButton(MBSensorCallback callback = nullptr);
 
         /**
          * @brief Gets the current sensor type.
@@ -93,10 +94,17 @@ class MovingBricks_
         
         /**
          * @brief Gets the current touch state.
+         * Sets touchStateChanged to false when called.
          * @return The current state of the touch sensor.
          */
-        MBTouchState getTouchState() const { return touchState; }
-        
+        MBTouchState getTouchState();
+
+         /**
+         * @brief Returns if the touch state has changed.
+         * @return True if the touch state has changed, false otherwise.
+         */
+        bool isTouchStateChanged() const { return touchStateChanged; }
+
         /**
          * @brief Gets the current debounce threshold.
          * @return The debounce threshold value.

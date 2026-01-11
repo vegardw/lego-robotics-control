@@ -15,22 +15,22 @@ ISR(TIMER2_COMPA_vect) {
     }
 }
 
-void MovingBricks_::begin() {
-    // Pin definitions for Mindstorms NXT/EV3 plug.
-    pinMode(MS_INPUT_PIN_1, INPUT); // Has external 10k ohm pull-up resistor to 5V
-                                    // so don't enable internal pull-up
+    void MovingBricks_::begin() {
+        // Pin definitions for Mindstorms NXT/EV3 plug.
+        pinMode(MS_INPUT_PIN_1, INPUT); // Has external 10k ohm pull-up resistor to 5V
+                                        // so don't enable internal pull-up
 
-    // Setup Timer2 for automatic polling of sensors
-    cli();                          // Disable interrupts
-    TCCR2A = (1 << WGM21);          // CTC mode
-    TCCR2B = (1 << CS22);           // Prescaler 64
-    OCR2A = 255;                    // Overflow at 256 ticks for ~1.024 ms
-    TIMSK2 |= (1 << OCIE2A);        // Enable compare match interrupt
-    sei();                          // Enable interrupts
-    
-    // All setup done, set initialized flag
-    initialized = true;
-}
+        // Setup Timer2 for automatic polling of sensors
+        cli();                          // Disable interrupts
+        TCCR2A = (1 << WGM21);          // CTC mode
+        TCCR2B = (1 << CS22);           // Prescaler 64
+        OCR2A = 255;                    // Overflow at 256 ticks for ~1.024 ms
+        TIMSK2 |= (1 << OCIE2A);        // Enable compare match interrupt
+        sei();                          // Enable interrupts
+        
+        // All setup done, set initialized flag
+        initialized = true;
+    }
 
 void MovingBricks_::end() {
     initialized = false;            // Clear initialized flag
@@ -57,6 +57,7 @@ void MovingBricks_::readTouchSensor() {
             if (debounceCounter >= debounceThreshold) {
                 touchState = newRawState;
                 debounceCounter = 0;
+                touchStateChanged = true;
                 if (touchButtonCallback != nullptr) {
                     touchButtonCallback();
                 }
@@ -68,6 +69,11 @@ void MovingBricks_::readTouchSensor() {
     } else {
         debounceCounter = 0;
     }
+}
+
+MBTouchState MovingBricks_::getTouchState() {
+    touchStateChanged = false;
+    return touchState;
 }
 
 void MovingBricks_::setTouchButton(MBSensorCallback callback) {
