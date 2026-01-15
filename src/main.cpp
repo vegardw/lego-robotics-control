@@ -12,26 +12,17 @@ void setup() {
   digitalWrite(LED_BUILTIN, ledState ? HIGH : LOW);
   Serial.begin(9600);
   MovingBricks.begin();
-  if (useCallback)
+  MovingBricks.setLightSensor(true);
+  /*if (useCallback)
     MovingBricks.setTouchButton(touchButtonCallback);
   else
-    MovingBricks.setTouchButton();
+    MovingBricks.setTouchButton();*/
 }
 
 void loop() {
-  if(!useCallback) {
-    if(MovingBricks.isTouchStateChanged()) {
-      MBTouchState state = MovingBricks.getTouchState(); // This clears the changed flag
-      if(state == MBTouchState::PRESSED) {
-        ledState = !ledState;
-        digitalWrite(LED_BUILTIN, ledState ? HIGH : LOW);
-        Serial.println("Touch Sensor Pressed");
-      } else if(state == MBTouchState::RELEASED) {
-        Serial.println("Touch Sensor Released");
-      }
-    }
-  }
-  delay(50);
+  Serial.println(MovingBricks.getLightSensorValue());
+  delay(2000);
+  //MovingBricks.enableLightSensorLED(!MovingBricks.getLightSensorLEDLit());
 }
 
 // Example callback function for touch sensor events,

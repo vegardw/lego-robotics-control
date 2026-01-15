@@ -8,6 +8,8 @@
 
 // Pin definitions
 #define MS_INPUT_PIN_1 A0  // PIN 1: Analog input with external 10k ohm pull-up resistor to 5V
+#define MS_INPUT_PIN_5 A4  // PIN 5: Connected to A4, only used as digital output for now
+#define MS_INPUT_PIN_6 A5  // PIN 5: Connected to A4, only used as digital output for now
 
 /// @brief Callback function type for sensor events.
 typedef void (*MBSensorCallback)(void);
@@ -17,6 +19,7 @@ enum class MBSensorType
 {
     NONE,      ///< No sensor configured.
     NXT_TOUCH, ///< LEGO NXT Touch Sensor.
+    NXT_LIGHT, ///< LEGO NXT Light Sensor
 };
 
 /// @brief Enumeration for the state of a touch sensor.
@@ -42,19 +45,26 @@ class MovingBricks_
         MovingBricks_& operator=(const MovingBricks_&) = delete;  ///< Deleted assignment operator to enforce singleton.
 
         bool initialized = false;  ///< Flag indicating if the library is initialized.
+
         MBSensorType sensorType = MBSensorType::NONE;  ///< Current sensor type configured.
+        
         MBTouchState touchState = MBTouchState::NONE;  ///< Current stable state of the touch sensor.
         bool touchStateChanged = false;  ///< Flag indicating if the touch state has changed since last read.
         volatile MBTouchState rawTouchState = MBTouchState::NONE;  ///< Raw state from ADC readings.
         volatile int debounceCounter = 0;  ///< Counter for debouncing stability.
         int debounceThreshold = 2;  ///< Number of consecutive stable readings required for state change.
+        MBSensorCallback touchButtonCallback = nullptr;  ///< Callback function for touch sensor events.
+        MBTouchState readRawTouchState();  ///< Read the raw state of the touch sensor.
+
+        bool lightSensorLEDLit = false; ///< Flag indicating if the light sensor LED is lit
+        int lightSensorMinAnalog = 62;  ///< Minimum analog value for 100% light
+        int lightSensorMaxAnalog = 1023; ///< Maximum analog value for 0% light
 
         bool sensorFault = false;  ///< Flag indicating if the sensor appears faulty (e.g., invalid voltage range).
         int faultCounter = 0;      ///< Counter for consecutive invalid readings to detect faults.
         int faultThreshold = 10;  ///< Consecutive invalid readings before marking as fault.
 
-        MBSensorCallback touchButtonCallback = nullptr;  ///< Callback function for touch sensor events.
-        MBTouchState readRawTouchState();  ///< Read the raw state of the touch sensor.
+        
         
         
         
@@ -80,7 +90,14 @@ class MovingBricks_
         void readTouchSensor();
 
         /**
-         * @brief Sets the callback for touch sensor events.
+         * @brief Configures the sensor as a light sensor.
+         * Configures the sensor type to NXT_LIGHT and performs an initial read.
+         * @param enableLED Enable built-in LED (default = false).
+         */
+        void setLightSensor(bool enableLED = false);
+
+                /**
+         * @brief Configures the sensor as a touch button.
          * Configures the sensor type to NXT_TOUCH and performs an initial read.
          * @param callback Pointer to the callback function to be called on state change (default = nullptr).
          */
@@ -145,6 +162,10 @@ class MovingBricks_
          * @return Pointer to the callback function.
          */
         MBSensorCallback getTouchButtonCallback() const { return touchButtonCallback; }
+
+        void enableLightSensorLED(bool enable=true);
+        bool getLightSensorLEDLit() const {return lightSensorLEDLit; }
+        int getLightSensorValue();
 
         /**
          * @brief Gets the singleton instance of the MovingBricks class.

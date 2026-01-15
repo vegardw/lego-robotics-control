@@ -19,6 +19,10 @@ ISR(TIMER2_COMPA_vect) {
         // Pin definitions for Mindstorms NXT/EV3 plug.
         pinMode(MS_INPUT_PIN_1, INPUT); // Has external 10k ohm pull-up resistor to 5V
                                         // so don't enable internal pull-up
+        pinMode(MS_INPUT_PIN_5, INPUT); // Set as input/high z here. For sensors that use
+                                        // pin as output, change it when setting sensor type
+        pinMode(MS_INPUT_PIN_6, INPUT); // Set as input/high z here. For sensors that use
+                                        // pin as output, change it when setting sensor type
 
         // Setup Timer2 for automatic polling of sensors
         cli();                          // Disable interrupts
@@ -83,6 +87,13 @@ void MovingBricks_::setTouchButton(MBSensorCallback callback) {
     touchButtonCallback = callback;
 }
 
+void MovingBricks_::setLightSensor(bool enableLED) {
+    sensorType = MBSensorType::NXT_LIGHT;
+    lightSensorLEDLit = enableLED;
+    pinMode(MS_INPUT_PIN_5, OUTPUT);
+    digitalWrite(MS_INPUT_PIN_5, lightSensorLEDLit? HIGH : LOW);
+}
+
 MBTouchState MovingBricks_::readRawTouchState() {
     cli(); // Disable interrupts to ensure consistent ADC reading
     int pin1Voltage = analogRead(MS_INPUT_PIN_1) * (5.0 / 1023.0) * 1000; // mV
@@ -111,6 +122,23 @@ MBTouchState MovingBricks_::readRawTouchState() {
     }
 
     return state;
+}
+
+void MovingBricks_::enableLightSensorLED(bool enable) {
+    lightSensorLEDLit = enable;
+    digitalWrite(MS_INPUT_PIN_5, lightSensorLEDLit? HIGH : LOW);
+}
+
+int MovingBricks_::getLightSensorValue() {
+    int analogValue = analogRead(MS_INPUT_PIN_1);
+    // Map analog value (0 at 100% light, 1023 at 0% light) to percentage (0-100)
+    // Clamp to ensure valid range
+    if (analogValue < lightSensorMinAnalog) analogValue = lightSensorMinAnalog;
+    if (analogValue > lightSensorMaxAnalog) analogValue = lightSensorMaxAnalog;
+    // Cast lightSensorMaxAnalog - analogValue to prevent integer overflow
+    // if this value is above 655
+    int percentage = ((long)(lightSensorMaxAnalog - analogValue) * 100) / (lightSensorMaxAnalog - lightSensorMinAnalog);
+    return percentage;
 }
 
 MovingBricks_ &MovingBricks_::getInstance() {
